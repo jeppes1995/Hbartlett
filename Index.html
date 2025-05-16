@@ -1,1 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>my writings - a digital journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* A soft, neutral background */
+            color: #333;
+            text-transform: lowercase; /* Make all text lowercase */
+        }
 
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom sharp shadow for notes */
+        .note-shadow {
+            box-shadow: 6px 6px 0px #1a202c;
+        }
+      
+        /* Smooth transitions for hover effects and expansion/collapse */
+        .note {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, max-height 0.5s ease-in-out;
+            cursor: pointer;
+            overflow: hidden; /* Important for max-height transition */
+            max-height: 180px; /* Adjusted initial max height for shorter snippet */
+        }
+
+        .note.is-expanded {
+            max-height: 1200px; /* Large enough to fit expanded content, adjust if very long content */
+        }
+
+        /* Combined hover effect: grow and change shadow */
+        .note:hover:not(.is-expanded) { 
+            transform: scale(1.03); /* Grow effect */
+            box-shadow: 8px 8px 0px #2d3748; /* Darker/larger shadow on hover */
+        }
+        
+        .note-snippet {
+            padding-bottom: 1.25rem; 
+        }
+
+        /* Styling for text containers within notes to handle word wrapping */
+        .note-snippet p, 
+        .note-content-full div { /* Targets the div directly inside .note-content-full */
+            overflow-wrap: break-word; /* Standard property */
+            word-wrap: break-word;     /* Older browsers, alias for overflow-wrap */
+        }
+
+        .note-content-full {
+            display: none; 
+            padding-top: 1rem; 
+            opacity: 0; /* Start hidden for transition */
+            transition: opacity 0.3s ease-in-out 0.2s; /* Fade in after height transition starts */
+        }
+
+        .note.is-expanded .note-content-full {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Custom scrollbar (optional) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Simple fade-in animation for elements */
+        .fade-in {
+            animation: fadeInAnimation 0.8s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInAnimation {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Staggered fade-in for notes - initial state for JS */
+        .writings-grid .note, #featured-note { 
+            opacity: 0; 
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <section class="py-16 md:py-24 bg-gradient-to-br from-slate-50 to-stone-100 fade-in" style="animation-delay: 0.2s;">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="font-playfair text-4xl md:text-6xl font-bold text-gray-800 mb-4">my musings</h1>
+            <p class="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                exploring life's moments, fleeting thoughts, and the whispers of poetry. welcome to my digital journal.
+            </p>
+            <div id="featured-note" class="note max-w-xl mx-auto bg-white p-8 rounded-2xl note-shadow transform transition-all duration-300 ease-in-out">
+                <div class="note-snippet">
+                    <h3 class="font-playfair text-3xl font-semibold text-gray-800 mb-3" id="featured-title">loading featured note...</h3>
+                    <p class="text-gray-600 leading-relaxed text-sm" id="featured-snippet-text">
+                        please wait...
+                    </p>
+                </div>
+                <div class="note-content-full text-left" id="featured-content-full">
+                    <p class="text-gray-700 leading-loose mt-4">
+                        full content will appear here.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main id="writings" class="py-16 md:py-20 container mx-auto px-6">
+        <h2 class="font-playfair text-4xl md:text-5xl font-bold text-gray-800 text-center mb-16 fade-in" style="animation-delay: 0.4s;">
+            collection of writings
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12 writings-grid">
+            </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-12 fade-in" style="animation-delay: 0.6s;">
+        <div class="container mx-auto px-6 text-center">
+            <p class="font-playfair text-xl mb-2">&copy; <span id="currentYear"></span> your name here. all rights reserved.</p>
+            <p class="text-sm">crafted with words and code.</p>
+            <div class="mt-4 space-x-4">
+                <a href="#" class="hover:text-indigo-400 transition-colors">twitter</a>
+                <a href="#" class="hover:text-indigo-400 transition-colors">instagram</a>
+                <a href="#" class="hover:text-indigo-400 transition-colors">linkedin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Data for Writings ---
+            const writingsData = [
+                {
+                    title: "whispers of the dawn",
+                    fullText: "full poem or text for 'whispers of the dawn'.<br>the gentle light, a soft caress,<br>unveils the world, no more, no less.<br>a bird takes flight, a silent vow,<br>to greet the day, starting now.<br><br>more lines can be added here, extending the piece as needed."
+                },
+                {
+                    title: "an unexpected journey",
+                    fullText: "the full story of 'an unexpected journey'. it started on a rainy tuesday, much like any other. i had my plans, a neat checklist, but the universe, it seemed, had a mischievous grin and a different itinerary for me. a missed bus, a chance encounter, and suddenly i was on a train heading north, not south.<br><br>the initial panic gave way to a strange sense of calm. what followed was a series of small adventures, quirky characters, and the kind of scenery that steals your breath away. i learned more in those unplanned days than i had in months of structured living. it taught me the beauty of surrender and the joy of the unknown."
+                },
+                {
+                    title: "the art of letting go",
+                    fullText: "a deeper reflection on 'the art of letting go'. we cling so tightly to ideas, to people, to past versions of ourselves, fearing the void that letting go might create. but in that void, there is space. space for new growth, new light, new understanding. it's not an act of weakness, but one of profound strength and self-compassion."
+                },
+                {
+                    title: "city lights, silent stories",
+                    fullText: "expanded observations for 'city lights, silent stories'. from my apartment window, the city is a tapestry of light and shadow. each illuminated square is a tiny stage, playing out dramas i can only guess at. a solitary figure reading, a family gathered for dinner, the flicker of a television screen – all these silent stories weaving together the complex narrative of urban life."
+                },
+                {
+                    title: "echoes in the mist",
+                    fullText: "the complete poem 'echoes in the mist':<br><br>the mist hangs low, a spectral shroud,<br>where memories drift, a silent crowd.<br>an echo calls, a whispered name,<br>a love once lost, a burning flame.<br><br>through veils of grey, the phantoms glide,<br>with hollow eyes and dreams that hide.<br>the air is thick with what has been,<br>a haunting song, a world unseen."
+                },
+                {
+                    title: "the old bookstore",
+                    fullText: "the full essay on 'the old bookstore'. nestled on a quiet side street, \"the dusty tome\" is more than just a shop; it's a sanctuary. the bell above the door chimes a welcome, and the scent of aged paper and ink wraps around you like a comforting blanket. aisles twist and turn, shelves groan under the weight of stories waiting to be rediscovered. i can spend hours there, lost in the whispers of authors long gone, each book a doorway to another life, another era."
+                },
+                { // Your test note
+                    title: "test",
+                    fullText: "testesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt"
+                }
+            ];
+
+            // --- Helper Function to Create Snippet (Improved Logic) ---
+            function createSnippet(fullText, wordCount = 10, charLimit = 75) {
+                // 1. Get plain text
+                const textOnly = fullText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                if (!textOnly) {
+                    return ''; // Handle empty or whitespace-only input
+                }
+
+                const words = textOnly.split(' ');
+                let needsEllipsis = false;
+
+                // 2. Take the first 'wordCount' words
+                let snippetWordsArray = words.slice(0, wordCount);
+                let currentSnippet = snippetWordsArray.join(' ');
+
+                // 3. Check if original text had more words than taken for the snippet
+                if (words.length > wordCount) {
+                    needsEllipsis = true;
+                }
+
+                // 4. Apply character limit to the current snippet if it's too long
+                if (currentSnippet.length > charLimit) {
+                    currentSnippet = currentSnippet.substring(0, charLimit);
+                    needsEllipsis = true; // Character truncation also implies ellipsis
+
+                    // Try to break at the last space to avoid cutting a word mid-way,
+                    // but only if we actually truncated (currentSnippet.length is now charLimit)
+                    const lastSpaceIndex = currentSnippet.lastIndexOf(' ');
+                    if (lastSpaceIndex > 0 && currentSnippet.length === charLimit) { 
+                        currentSnippet = currentSnippet.substring(0, lastSpaceIndex);
+                    }
+                }
+                
+                // 5. Append ellipsis if needed
+                if (needsEllipsis) {
+                    // Prevent double ellipsis if substring somehow ended with one (unlikely with this logic)
+                    if (currentSnippet.endsWith('...')) { 
+                        return currentSnippet;
+                    }
+                    // Clean up potential trailing punctuation before adding ellipsis
+                    if (currentSnippet.endsWith('.') || currentSnippet.endsWith(',')) {
+                        currentSnippet = currentSnippet.slice(0, -1);
+                    }
+                    return currentSnippet.trim() + '...'; // Ensure no trailing space before ellipsis
+                }
+
+                return currentSnippet; // Return as is if no truncation by word or char happened
+            }
+
+            // --- Function to Create a Grid Note Element ---
+            function createGridNoteElement(noteData) {
+                const article = document.createElement('article');
+                article.className = 'note bg-white p-6 md:p-8 rounded-2xl note-shadow transform';
+
+                const snippetDiv = document.createElement('div');
+                snippetDiv.className = 'note-snippet';
+
+                const titleH3 = document.createElement('h3');
+                titleH3.className = 'font-playfair text-2xl font-semibold text-gray-800 mb-3';
+                titleH3.textContent = noteData.title;
+
+                const snippetP = document.createElement('p');
+                snippetP.className = 'text-gray-600 leading-relaxed text-sm';
+                snippetP.textContent = createSnippet(noteData.fullText);
+
+                snippetDiv.appendChild(titleH3);
+                snippetDiv.appendChild(snippetP);
+
+                const fullContentDiv = document.createElement('div');
+                fullContentDiv.className = 'note-content-full text-left';
+                fullContentDiv.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${noteData.fullText}</div>`;
+
+                article.appendChild(snippetDiv);
+                article.appendChild(fullContentDiv);
+
+                return article;
+            }
+            
+            // --- Populate Writings Grid ---
+            const writingsGrid = document.querySelector('.writings-grid');
+            if (writingsGrid) {
+                writingsData.forEach(data => {
+                    const noteEl = createGridNoteElement(data);
+                    writingsGrid.appendChild(noteEl);
+                });
+            }
+
+            // --- Random Featured Note Logic ---
+            const featuredNoteElement = document.getElementById('featured-note');
+            const featuredTitleElement = document.getElementById('featured-title');
+            const featuredSnippetElement = document.getElementById('featured-snippet-text');
+            const featuredContentFullElement = document.getElementById('featured-content-full');
+            
+            if (writingsData.length > 0 && featuredNoteElement) {
+                const randomIndex = Math.floor(Math.random() * writingsData.length);
+                const randomNoteData = writingsData[randomIndex];
+
+                featuredTitleElement.textContent = randomNoteData.title;
+                featuredSnippetElement.textContent = createSnippet(randomNoteData.fullText);
+                featuredContentFullElement.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${randomNoteData.fullText}</div>`;
+            } else if (featuredNoteElement) {
+                featuredTitleElement.textContent = "no writings yet";
+                featuredSnippetElement.textContent = "add some notes to the collection to see one featured here.";
+                featuredContentFullElement.innerHTML = "<p>your amazing content will appear here once you add notes.</p>";
+            }
+
+            // --- Apply Event Listeners and Animations to ALL notes ---
+            const allNoteDOMElements = document.querySelectorAll('.note'); 
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1 
+            };
+            const scrollObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry) => { 
+                    if (entry.isIntersecting) {
+                        const actualIndex = Array.from(allNoteDOMElements).indexOf(entry.target);
+                        entry.target.style.animation = `fadeInAnimation 0.5s ease-in-out ${actualIndex * 0.1}s forwards`;
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            allNoteDOMElements.forEach(note => {
+                scrollObserver.observe(note);
+
+                note.addEventListener('click', (event) => {
+                    if (event.target.tagName === 'A' && note.classList.contains('is-expanded')) {
+                        return; 
+                    }
+                    if (event.offsetX > note.clientWidth - 16 && note.scrollHeight > note.clientHeight) { 
+                         return; 
+                    }
+
+                    const wasExpanded = note.classList.contains('is-expanded');
+
+                    allNoteDOMElements.forEach(otherNote => {
+                        if (otherNote !== note && otherNote.classList.contains('is-expanded')) {
+                            otherNote.classList.remove('is-expanded');
+                        }
+                    });
+                    note.classList.toggle('is-expanded');
+                    
+                    if (note.classList.contains('is-expanded') && !wasExpanded) {
+                        const noteRect = note.getBoundingClientRect();
+                        const isTopOffScreen = noteRect.top < 0;
+                        const isBottomWayDown = noteRect.top > window.innerHeight * 0.6; 
+
+                        if (isTopOffScreen || isBottomWayDown ) { 
+                            setTimeout(() => {
+                                note.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                            }, 100); 
+                        }
+                    }
+                });
+            });
+
+            const currentYearElement = document.getElementById('currentYear');
+            if (currentYearElement) {
+                currentYearElement.textContent = new Date().getFullYear();
+            }
+        });
+    </script>
+
+</body>
+</html>
