@@ -21,25 +21,21 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* Custom sharp shadow for notes */
+        /* Custom sharp shadow for notes & modal */
         .note-shadow {
             box-shadow: 6px 6px 0px #1a202c;
         }
       
-        /* Smooth transitions for hover effects and expansion/collapse */
+        /* Smooth transitions for hover effects */
         .note {
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, max-height 0.5s ease-in-out;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Removed max-height from here */
             cursor: pointer;
-            overflow: hidden; /* Important for max-height transition */
-            max-height: 180px; /* Adjusted initial max height for shorter snippet */
+            overflow: hidden; 
+            max-height: 180px; /* Initial max height for snippet view */
         }
 
-        .note.is-expanded {
-            max-height: 1200px; /* Large enough to fit expanded content, adjust if very long content */
-        }
-
-        /* Combined hover effect: grow and change shadow */
-        .note:hover:not(.is-expanded) { 
+        /* Combined hover effect: grow and change shadow - applies to snippet view */
+        .note:hover { 
             transform: scale(1.03); /* Grow effect */
             box-shadow: 8px 8px 0px #2d3748; /* Darker/larger shadow on hover */
         }
@@ -50,21 +46,69 @@
 
         /* Styling for text containers within notes to handle word wrapping */
         .note-snippet p, 
-        .note-content-full div { /* Targets the div directly inside .note-content-full */
-            overflow-wrap: break-word; /* Standard property */
-            word-wrap: break-word;     /* Older browsers, alias for overflow-wrap */
+        .note-content-full div, /* Targets the div directly inside .note-content-full */
+        #modal-full-text div { /* Also apply to modal content */
+            overflow-wrap: break-word; 
+            word-wrap: break-word;     
         }
-
-        .note-content-full {
-            display: none; 
-            padding-top: 1rem; 
-            opacity: 0; /* Start hidden for transition */
-            transition: opacity 0.3s ease-in-out 0.2s; /* Fade in after height transition starts */
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px); /* For Safari */
+            z-index: 40;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none; /* Hidden by default */
         }
-
-        .note.is-expanded .note-content-full {
-            display: block;
+        .modal-overlay.is-visible {
             opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: white;
+            padding: 2rem; /* 32px */
+            border-radius: 1rem; /* 16px */
+            width: 90%; /* Responsive width */
+            max-width: 700px; /* Max width for larger screens */
+            max-height: 85vh; /* Max height to prevent overflow */
+            overflow-y: auto; /* Scroll for long content */
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            pointer-events: none; /* Hidden by default */
+        }
+        .modal-container.is-visible {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 1rem; /* 16px */
+            right: 1.5rem; /* 24px */
+            font-size: 2.25rem; /* 36px */
+            font-weight: bold;
+            color: #4a5568; /* gray-700 */
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s ease-in-out;
+        }
+        .modal-close-button:hover {
+            color: #1a202c; /* gray-900 */
+        }
+
+        .body-no-scroll {
+            overflow: hidden;
         }
         
         /* Custom scrollbar (optional) */
@@ -108,18 +152,14 @@
             <p class="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
                 exploring life's moments, fleeting thoughts, and the whispers of poetry. welcome to my digital journal.
             </p>
-            <div id="featured-note" class="note max-w-xl mx-auto bg-white p-8 rounded-2xl note-shadow transform transition-all duration-300 ease-in-out">
+            <div id="featured-note" class="note max-w-xl mx-auto bg-white p-8 rounded-2xl note-shadow transform">
                 <div class="note-snippet">
                     <h3 class="font-playfair text-3xl font-semibold text-gray-800 mb-3" id="featured-title">loading featured note...</h3>
                     <p class="text-gray-600 leading-relaxed text-sm" id="featured-snippet-text">
                         please wait...
                     </p>
                 </div>
-                <div class="note-content-full text-left" id="featured-content-full">
-                    <p class="text-gray-700 leading-loose mt-4">
-                        full content will appear here.
-                    </p>
-                </div>
+                <div class="hidden" id="featured-content-full-source"></div>
             </div>
         </div>
     </section>
@@ -132,6 +172,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12 writings-grid">
             </div>
     </main>
+
+    <div id="note-modal-overlay" class="modal-overlay"></div>
+    <div id="note-modal" class="modal-container note-shadow">
+        <button id="modal-close-button" class="modal-close-button" aria-label="close modal">&times;</button>
+        <h2 id="modal-title" class="font-playfair text-3xl md:text-4xl font-semibold text-gray-800 mb-6">Modal Title</h2>
+        <div id="modal-full-text" class="text-gray-700 leading-loose text-base">
+            </div>
+    </div>
+
 
     <footer class="bg-gray-800 text-gray-300 py-12 fade-in" style="animation-delay: 0.6s;">
         <div class="container mx-auto px-6 text-center">
@@ -159,57 +208,45 @@
                 },
                 {
                     title: "ok3",
-                    fullText: "Livet er og bliver svært  Det er svært at være til Det er svært at kigge sig omkring  Det er svært at kigge ind ad.  Fordi, kigger vi kun ud,  får vi så nogensinde styr, styr på os selv og vores egne problemer  styr på os selv og vores egne mangler? vores egne fejl?   Men hvorfor er livet så svært?  Livet er som et korthus, det kan blives stort og smukt, men med et enkelt forkert pust, bum. Så er livet veltet, endt og gået.  og nåede du alt det du skulle mens du var her?  nåede du at elske? nåede du at blive elsket?  nåede du at finde ud af hvad du skulle mens du var her?  Nåede du at finde ud af hvorfor du var her?   Livet er svært  Der er mange spørgsmål der puster på ens korthus.  Hver eneste dag med frygt for at det vil falde. Og hvis det falder, er det så for sent at bygge det op på ny?  Meningen med det hele er nok at mestre,  mestre ikke at spekulere  Ikke at spekulere om du var god nok om andre synes du var god nok, eller om dine egne forventninger blev opfyldt   Livet er svært,  men kan du tæmme spekulationens fangarme, kan det måske blive en smule lettere at være til,  i denne verden "
+                    fullText: "Livet er og bliver svært.  Det er svært at være til. Det er svært at kigge sig omkring.  Det er svært at kigge ind ad.  Fordi, kigger vi kun ud,  får vi så nogensinde styr, styr på os selv og vores egne problemer.  styr på os selv og vores egne mangler? vores egne fejl?   Men hvorfor er livet så svært?  Livet er som et korthus, det kan blives stort og smukt, men med et enkelt forkert pust, bum. Så er livet veltet, endt og gået.  og nåede du alt det du skulle mens du var her?  nåede du at elske? nåede du at blive elsket?  nåede du at finde ud af hvad du skulle mens du var her?  Nåede du at finde ud af hvorfor du var her?   Livet er svært.  Der er mange spørgsmål der puster på ens korthus.  Hver eneste dag med frygt for at det vil falde. Og hvis det falder, er det så for sent at bygge det op på ny?  Meningen med det hele er nok at mestre,  mestre ikke at spekulere.  Ikke at spekulere om du var god nok om andre synes du var god nok, eller om dine egne forventninger blev opfyldt.   Livet er svært,  men kan du tæmme spekulationens fangarme, kan det måske blive en smule lettere at være til,  i denne verden. "
                 }
-                // Add new notes here by adding new objects to this array
             ];
+
+            // --- Modal Elements ---
+            const modalOverlay = document.getElementById('note-modal-overlay');
+            const modalContainer = document.getElementById('note-modal');
+            const modalTitleElement = document.getElementById('modal-title');
+            const modalFullTextElement = document.getElementById('modal-full-text');
+            const modalCloseButton = document.getElementById('modal-close-button');
 
             // --- Helper Function to Format Text with Line Breaks ---
             function formatTextWithLineBreaks(text) {
                 if (!text) return '';
                 let processedText = text;
-                // Add <br> after each specified punctuation mark.
-                // $1 refers to the captured punctuation mark.
-                // Ensure that spaces around the punctuation are handled correctly to avoid multiple <br> or <br> before space.
-                // This regex looks for punctuation followed by optional spaces, and replaces it with punctuation<br>space (if space was there)
                 processedText = processedText.replace(/([,?!.])(\s*)/g, '$1<br>$2');
-                // Remove any <br> that might be followed immediately by another <br> due to existing manual breaks.
-                // This is a simple approach; more complex logic might be needed for perfect spacing with mixed manual/auto breaks.
                 processedText = processedText.replace(/<br>\s*<br>/gi, '<br>'); 
                 return processedText;
             }
 
-            // --- Helper Function to Create Snippet (Improved Logic) ---
+            // --- Helper Function to Create Snippet ---
             function createSnippet(fullText, wordCount = 10, charLimit = 75) {
                 const textOnly = fullText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-                if (!textOnly) {
-                    return ''; 
-                }
-
+                if (!textOnly) return ''; 
                 const words = textOnly.split(' ');
                 let needsEllipsis = false;
-
                 let snippetWordsArray = words.slice(0, wordCount);
                 let currentSnippet = snippetWordsArray.join(' ');
-
-                if (words.length > wordCount) {
-                    needsEllipsis = true;
-                }
-
+                if (words.length > wordCount) needsEllipsis = true;
                 if (currentSnippet.length > charLimit) {
                     currentSnippet = currentSnippet.substring(0, charLimit);
                     needsEllipsis = true; 
-
                     const lastSpaceIndex = currentSnippet.lastIndexOf(' ');
                     if (lastSpaceIndex > 0 && currentSnippet.length === charLimit) { 
                         currentSnippet = currentSnippet.substring(0, lastSpaceIndex);
                     }
                 }
-                
                 if (needsEllipsis) {
-                    if (currentSnippet.endsWith('...')) { 
-                        return currentSnippet;
-                    }
+                    if (currentSnippet.endsWith('...')) return currentSnippet;
                     if (currentSnippet.endsWith('.') || currentSnippet.endsWith(',')) {
                         currentSnippet = currentSnippet.slice(0, -1);
                     }
@@ -218,10 +255,34 @@
                 return currentSnippet; 
             }
 
+            // --- Function to Open Modal ---
+            function openModal(title, fullText) {
+                modalTitleElement.textContent = title;
+                modalFullTextElement.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${formatTextWithLineBreaks(fullText)}</div>`;
+                modalOverlay.classList.add('is-visible');
+                modalContainer.classList.add('is-visible');
+                document.body.classList.add('body-no-scroll');
+            }
+
+            // --- Function to Close Modal ---
+            function closeModal() {
+                modalOverlay.classList.remove('is-visible');
+                modalContainer.classList.remove('is-visible');
+                document.body.classList.remove('body-no-scroll');
+            }
+
+            // Add event listeners for closing modal
+            if (modalCloseButton) modalCloseButton.addEventListener('click', closeModal);
+            if (modalOverlay) modalOverlay.addEventListener('click', closeModal); // Click outside modal content to close
+
+
             // --- Function to Create a Grid Note Element ---
-            function createGridNoteElement(noteData) {
+            function createGridNoteElement(noteData, index) {
                 const article = document.createElement('article');
                 article.className = 'note bg-white p-6 md:p-8 rounded-2xl note-shadow transform';
+                // Store data on the element for easy access later
+                article.dataset.title = noteData.title;
+                article.dataset.fullText = noteData.fullText; // Store original full text
 
                 const snippetDiv = document.createElement('div');
                 snippetDiv.className = 'note-snippet';
@@ -236,23 +297,20 @@
 
                 snippetDiv.appendChild(titleH3);
                 snippetDiv.appendChild(snippetP);
-
-                const fullContentDiv = document.createElement('div');
-                fullContentDiv.className = 'note-content-full text-left';
-                const formattedFullText = formatTextWithLineBreaks(noteData.fullText);
-                fullContentDiv.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${formattedFullText}</div>`;
-
                 article.appendChild(snippetDiv);
-                article.appendChild(fullContentDiv);
 
+                // Click listener to open modal
+                article.addEventListener('click', () => {
+                    openModal(article.dataset.title, article.dataset.fullText);
+                });
                 return article;
             }
             
             // --- Populate Writings Grid ---
             const writingsGrid = document.querySelector('.writings-grid');
             if (writingsGrid) {
-                writingsData.forEach(data => {
-                    const noteEl = createGridNoteElement(data);
+                writingsData.forEach((data, index) => {
+                    const noteEl = createGridNoteElement(data, index);
                     writingsGrid.appendChild(noteEl);
                 });
             }
@@ -261,7 +319,7 @@
             const featuredNoteElement = document.getElementById('featured-note');
             const featuredTitleElement = document.getElementById('featured-title');
             const featuredSnippetElement = document.getElementById('featured-snippet-text');
-            const featuredContentFullElement = document.getElementById('featured-content-full');
+            const featuredContentFullSource = document.getElementById('featured-content-full-source'); // Hidden div for source
             
             if (writingsData.length > 0 && featuredNoteElement) {
                 const randomIndex = Math.floor(Math.random() * writingsData.length);
@@ -269,21 +327,25 @@
 
                 featuredTitleElement.textContent = randomNoteData.title;
                 featuredSnippetElement.textContent = createSnippet(randomNoteData.fullText); 
-                const formattedFeaturedFullText = formatTextWithLineBreaks(randomNoteData.fullText);
-                featuredContentFullElement.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${formattedFeaturedFullText}</div>`;
+                // Store full text in the hidden div for the featured note to access on click
+                if(featuredContentFullSource) featuredContentFullSource.textContent = randomNoteData.fullText; 
+                
+                featuredNoteElement.dataset.title = randomNoteData.title; // Store for modal
+                featuredNoteElement.dataset.fullText = randomNoteData.fullText; // Store for modal
+
+                featuredNoteElement.addEventListener('click', () => {
+                    openModal(featuredNoteElement.dataset.title, featuredNoteElement.dataset.fullText);
+                });
+
             } else if (featuredNoteElement) {
                 featuredTitleElement.textContent = "no writings yet";
                 featuredSnippetElement.textContent = "add some notes to the collection to see one featured here.";
-                featuredContentFullElement.innerHTML = "<p>your amazing content will appear here once you add notes.</p>";
             }
 
-            // --- Apply Event Listeners and Animations to ALL notes ---
+            // --- Apply Staggered Fade-in Animation to ALL notes (Grid + Featured) ---
             const allNoteDOMElements = document.querySelectorAll('.note'); 
-
             const observerOptions = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.1 
+                root: null, rootMargin: '0px', threshold: 0.1 
             };
             const scrollObserver = new IntersectionObserver((entries, observer) => {
                 entries.forEach((entry) => { 
@@ -297,36 +359,6 @@
 
             allNoteDOMElements.forEach(note => {
                 scrollObserver.observe(note);
-
-                note.addEventListener('click', (event) => {
-                    if (event.target.tagName === 'A' && note.classList.contains('is-expanded')) {
-                        return; 
-                    }
-                    if (event.offsetX > note.clientWidth - 16 && note.scrollHeight > note.clientHeight) { 
-                         return; 
-                    }
-
-                    const wasExpanded = note.classList.contains('is-expanded');
-
-                    allNoteDOMElements.forEach(otherNote => {
-                        if (otherNote !== note && otherNote.classList.contains('is-expanded')) {
-                            otherNote.classList.remove('is-expanded');
-                        }
-                    });
-                    note.classList.toggle('is-expanded');
-                    
-                    if (note.classList.contains('is-expanded') && !wasExpanded) {
-                        const noteRect = note.getBoundingClientRect();
-                        const isTopOffScreen = noteRect.top < 0;
-                        const isBottomWayDown = noteRect.top > window.innerHeight * 0.6; 
-
-                        if (isTopOffScreen || isBottomWayDown ) { 
-                            setTimeout(() => {
-                                note.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-                            }, 100); 
-                        }
-                    }
-                });
             });
 
             const currentYearElement = document.getElementById('currentYear');
