@@ -67,6 +67,62 @@ Ikke at spekulere om du var god nok, om andre synes du var god nok, eller om din
 Livet er svært,
 men kan du tæmme spekulationens fangarme, kan det måske blive en smule lettere at være til,
 i denne verden`
+        },
+
+        {
+            title: "ok4",
+            fullText: `Hvornår er man god nok?
+Det ved jeg ikke om man bliver,
+..og god nok til hvad? 
+Til sig selv, eller sine omgivelser? 
+Forventninger der hober sig op,
+forventninger fra de bedste i ens liv,
+forventninger fra venner,
+venner som man ikke kan leve uden,
+venner som man ikke vil skuffe.
+Hvis ikke de kan opfyldes,
+er jeg så overhovedet god nok? `
+        },
+        {
+            title: "ok5",
+            fullText: `Jeg har en skygge jeg ikke kan slippe af med.
+Skygger er normalt ikke til at slippe,
+men den her har jeg kæmpet med hele mit liv. 
+Det er ikke en stemme, en tanke eller andet. 
+Det er ikke noget jeg forestiller mig, eller bilder mig selv ind. 
+Det er en jeg kæmper med hver eneste dag, og en jeg har kæmpet med det meste af mit voksne liv.. 
+
+Jeg har ikke vidst hvor skrøbelig jeg var, 
+lige indtil den første forelskelse, 
+den første skuffelse, 
+det første møgfald. 
+
+Hele min barndom har jeg været glad, 
+jeg har altid været den glade,
+den som aldrig var ked af det,
+den som støttede mine kammerater når de lå nede i mudderet. 
+Dertil voksede jeg op, og der medfulgte skuffelse
+depression, angst, frygt, usikkerhed. 
+Skuffelse i kærlighed. Var jeg ikke god nok? 
+Depression. Hvad skal jeg her? 
+Angst. Hvorfor er jeg ikke social længere? Hvorfor er jeg blevet bange for kontakt? 
+Frygt. Frygt for at miste, frygt for at være alene.
+Usikkerhed. Hvorfor er jeg ikke god nok? 
+
+Alle disse ting er noget som skyggen bilder mig ind. 
+Skyggen er og bliver mig selv. 
+Jeg er min egen værste fjende. 
+Jeg kan ikke slippe af med den. 
+
+Jeg har for mange år siden fundet mit livs kærlighed. 
+Hun elsker mig på trods af min skygge,
+en skygge som jeg prøver at holde væk. 
+Hvorfor elsker hun mig, når jeg har svært ved at elske mig selv? 
+Hun givet mig mine døtre, og jeg elsker dem af hele mit hjerte. 
+
+Skyggen er dog magtfuld og manipulerende. 
+Fordi på trods af den kærlighedserklæring, 
+overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.`
         }
         // Tilføj nye noter her ved at tilføje nye objekter til dette array
     ];
