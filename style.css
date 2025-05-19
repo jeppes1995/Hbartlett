@@ -1,0 +1,131 @@
+/* Brugerdefinerede Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f2f5; /* En blød, neutral baggrund */
+    color: #333;
+    text-transform: lowercase; /* Gør al tekst til små bogstaver */
+}
+
+.font-playfair {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Brugerdefineret skarp skygge til noter & modal */
+.note-shadow {
+    box-shadow: 6px 6px 0px #1a202c;
+}
+
+/* Bløde overgange for hover-effekter */
+.note {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+    overflow: hidden; 
+    max-height: 180px; /* Indledende maksimal højde for snippet-visning */
+}
+
+/* Kombineret hover-effekt: voks og skift skygge - gælder for snippet-visning */
+.note:hover { 
+    transform: scale(1.03); /* Vokseffekt */
+    box-shadow: 8px 8px 0px #2d3748; /* Mørkere/større skygge ved hover */
+}
+
+.note-snippet {
+    padding-bottom: 1.25rem; 
+}
+
+/* Styling for tekstcontainere inden i noter for at håndtere tekstombrydning */
+.note-snippet p, 
+#modal-full-text div { /* Gælder også for modal-indhold */
+    overflow-wrap: break-word; 
+    word-wrap: break-word;     
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); /* For Safari */
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none; /* Skjult som standard */
+}
+.modal-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background-color: white;
+    padding: 2rem; /* 32px */
+    border-radius: 1rem; /* 16px */
+    width: 90%; /* Responsiv bredde */
+    max-width: 700px; /* Maksimal bredde for større skærme */
+    max-height: 85vh; /* Maksimal højde for at forhindre overløb */
+    overflow-y: auto; /* Scroll for langt indhold */
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    pointer-events: none; /* Skjult som standard */
+}
+.modal-container.is-visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 1rem; /* 16px */
+    right: 1.5rem; /* 24px */
+    font-size: 2.25rem; /* 36px */
+    font-weight: bold;
+    color: #4a5568; /* gray-700 */
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease-in-out;
+}
+.modal-close-button:hover {
+    color: #1a202c; /* gray-900 */
+}
+
+.body-no-scroll {
+    overflow: hidden;
+}
+
+/* Brugerdefineret scrollbar (valgfrit) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Simpel fade-in animation for elementer */
+.fade-in {
+    animation: fadeInAnimation 0.8s ease-in-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInAnimation {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Forskudt fade-in for noter - indledende tilstand for JS */
+.writings-grid .note, #featured-note { 
+    opacity: 0; 
+}
