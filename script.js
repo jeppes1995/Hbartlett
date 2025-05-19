@@ -1,7 +1,6 @@
 // Vent på at hele DOM'en er indlæst, før scriptet køres
 document.addEventListener('DOMContentLoaded', () => {
     // --- Data for Skriv (Brugerens Danske Tekst) ---
-    // Brug backticks (`) for at skrive multiline tekst nemmere
     const writingsData = [
         {
             title: "ok",
@@ -68,7 +67,6 @@ Livet er svært,
 men kan du tæmme spekulationens fangarme, kan det måske blive en smule lettere at være til,
 i denne verden`
         },
-
         {
             title: "ok4",
             fullText: `Hvornår er man god nok?
@@ -137,8 +135,6 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
     // --- Hjælpefunktion: Konverter linjeskift i brugerinput til <br> tags ---
     function convertNewlinesToBr(text) {
         if (!text) return '';
-        // Først trim for at fjerne overflødige linjeskift i starten/slutningen af template literal
-        // Derefter erstat alle newline karakterer (\n) med <br>
         return text.trim().replace(/\n/g, '<br>');
     }
 
@@ -146,33 +142,22 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
     function addPunctuationBreaks(htmlText) {
         if (!htmlText) return '';
         let processedText = htmlText;
-        // Tilføj <br> efter specificeret tegnsætning, bevar eventuelle mellemrum efter tegnet.
-        // $1 er tegnet, $2 er mellemrummet.
         processedText = processedText.replace(/([,?!.])(\s*)/g, (match, punctuation, spaceAfterPunctuation) => {
-            // Undgå at tilføje <br> hvis der allerede er et <br> lige efter (fra convertNewlinesToBr)
-            // Dette er en simpel tjek; mere robust logik kan være nødvendig for komplekse tilfælde.
-            // For nu fokuserer vi på at tilføje <br> og derefter rydde op.
             return punctuation + '<br>' + spaceAfterPunctuation;
         });
-        
-        // Ryd op: Konsolider flere <br> tags (potentielt med whitespace imellem) til et enkelt <br>.
-        // Dette hjælper med at fjerne overflødige breaks, der kan opstå.
         processedText = processedText.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
         return processedText;
     }
 
     // --- Hjælpefunktion til at oprette snippet ---
-    function createSnippet(fullText, wordCount = 10, charLimit = 75) {
-        // Fjern HTML-tags for at få ren tekst til snippet-generering
+    function createSnippet(fullText, wordCount = 10, charLimit = 85) { // Lidt højere charLimit pga. større font
         const textOnly = fullText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
         if (!textOnly) return ''; 
         const words = textOnly.split(' ');
         let needsEllipsis = false;
         let snippetWordsArray = words.slice(0, wordCount);
         let currentSnippet = snippetWordsArray.join(' ');
-
         if (words.length > wordCount) needsEllipsis = true;
-
         if (currentSnippet.length > charLimit) {
             currentSnippet = currentSnippet.substring(0, charLimit);
             needsEllipsis = true; 
@@ -181,30 +166,38 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
                 currentSnippet = currentSnippet.substring(0, lastSpaceIndex);
             }
         }
-        
         if (needsEllipsis) {
             if (currentSnippet.endsWith('...')) return currentSnippet;
-            // Fjern eventuelt afsluttende tegnsætning før tilføjelse af ellipsis
             if (currentSnippet.endsWith('.') || currentSnippet.endsWith(',')) {
                 currentSnippet = currentSnippet.slice(0, -1);
             }
-            return currentSnippet.trim() + '...'; // Sørg for ingen efterfølgende mellemrum før ellipsis
+            return currentSnippet.trim() + '...'; 
         }
         return currentSnippet; 
     }
 
-    // --- Funktion til at åbne Modal ---
-    function openModal(title, originalFullText) { // Modtager nu originalFullText
-        modalTitleElement.textContent = title;
-        // Trin 1: Konverter brugerens linjeskift (fra template literals) til <br>
-        const textWithUserBreaks = convertNewlinesToBr(originalFullText);
-        // Trin 2: Tilføj yderligere <br> efter tegnsætning
-        const finalTextForDisplay = addPunctuationBreaks(textWithUserBreaks);
-        
-        modalFullTextElement.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${finalTextForDisplay}</div>`;
-        modalOverlay.classList.add('is-visible');
-        modalContainer.classList.add('is-visible');
-        document.body.classList.add('body-no-scroll');
+    // --- Funktion til at åbne Modal med Animation ---
+    function openModalWithAnimation(title, originalFullText, clickedNoteElement) {
+        // Tilføj klik-animation til noten
+        if (clickedNoteElement) {
+            clickedNoteElement.classList.add('note-clicked');
+            // Fjern animationsklassen efter animationen er færdig for at tillade gentagelse
+            setTimeout(() => {
+                clickedNoteElement.classList.remove('note-clicked');
+            }, 300); // Matcher varigheden af noteClickAnimation i CSS
+        }
+
+        // En lille forsinkelse før modalen vises for at lade note-klik-animationen spille lidt
+        setTimeout(() => {
+            modalTitleElement.textContent = title;
+            const textWithUserBreaks = convertNewlinesToBr(originalFullText);
+            const finalTextForDisplay = addPunctuationBreaks(textWithUserBreaks);
+            
+            modalFullTextElement.innerHTML = `<div class="text-gray-700 leading-loose mt-4">${finalTextForDisplay}</div>`;
+            modalOverlay.classList.add('is-visible');
+            modalContainer.classList.add('is-visible');
+            document.body.classList.add('body-no-scroll');
+        }, 100); // Lille forsinkelse for at klik-animationen kan ses
     }
 
     // --- Funktion til at lukke Modal ---
@@ -214,37 +207,36 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
         document.body.classList.remove('body-no-scroll');
     }
 
-    // Tilføj event listeners for at lukke modal
     if (modalCloseButton) modalCloseButton.addEventListener('click', closeModal);
     if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
-
 
     // --- Funktion til at oprette et Grid Note Element ---
     function createGridNoteElement(noteData, index) {
         const article = document.createElement('article');
         article.className = 'note bg-white p-6 md:p-8 rounded-2xl note-shadow transform';
-        // Gem original data på elementet for nem adgang senere
         article.dataset.title = noteData.title;
-        article.dataset.fullText = noteData.fullText; // Gem original fullText
+        article.dataset.fullText = noteData.fullText;
 
         const snippetDiv = document.createElement('div');
         snippetDiv.className = 'note-snippet';
 
         const titleH3 = document.createElement('h3');
-        titleH3.className = 'font-playfair text-2xl font-semibold text-gray-800 mb-3';
+        // Bruger Tailwind klasser for størrelse og vægt, som er justeret i HTML/CSS
+        titleH3.className = 'font-playfair text-2xl md:text-3xl font-bold text-gray-800 mb-3'; 
         titleH3.textContent = noteData.title;
 
         const snippetP = document.createElement('p');
-        snippetP.className = 'text-gray-600 leading-relaxed text-sm';
-        snippetP.textContent = createSnippet(noteData.fullText); // Snippet bruger original tekst
+        // Bruger Tailwind klasser for størrelse
+        snippetP.className = 'text-gray-700 leading-relaxed text-md'; 
+        snippetP.textContent = createSnippet(noteData.fullText); 
 
         snippetDiv.appendChild(titleH3);
         snippetDiv.appendChild(snippetP);
         article.appendChild(snippetDiv);
 
-        // Klik-listener til at åbne modal
         article.addEventListener('click', () => {
-            openModal(article.dataset.title, article.dataset.fullText);
+            // Passerer 'article' elementet til animationsfunktionen
+            openModalWithAnimation(article.dataset.title, article.dataset.fullText, article);
         });
         return article;
     }
@@ -262,7 +254,6 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
     const featuredNoteElement = document.getElementById('featured-note');
     const featuredTitleElement = document.getElementById('featured-title');
     const featuredSnippetElement = document.getElementById('featured-snippet-text');
-    // const featuredContentFullSource = document.getElementById('featured-content-full-source'); // Ikke længere nødvendigt at gemme i DOM
     
     if (writingsData.length > 0 && featuredNoteElement) {
         const randomIndex = Math.floor(Math.random() * writingsData.length);
@@ -271,12 +262,12 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
         featuredTitleElement.textContent = randomNoteData.title;
         featuredSnippetElement.textContent = createSnippet(randomNoteData.fullText); 
         
-        // Gem data på det fremhævede note-element for modal-funktionalitet
         featuredNoteElement.dataset.title = randomNoteData.title;
         featuredNoteElement.dataset.fullText = randomNoteData.fullText;
 
         featuredNoteElement.addEventListener('click', () => {
-            openModal(featuredNoteElement.dataset.title, featuredNoteElement.dataset.fullText);
+            // Passerer 'featuredNoteElement' til animationsfunktionen
+            openModalWithAnimation(featuredNoteElement.dataset.title, featuredNoteElement.dataset.fullText, featuredNoteElement);
         });
 
     } else if (featuredNoteElement) {
@@ -293,7 +284,8 @@ overbeviser den mig stadig om skuffelse, depression, angst, frygt og usikkerhed.
         entries.forEach((entry) => { 
             if (entry.isIntersecting) {
                 const actualIndex = Array.from(allNoteDOMElements).indexOf(entry.target);
-                entry.target.style.animation = `fadeInAnimation 0.5s ease-in-out ${actualIndex * 0.1}s forwards`;
+                // Gør stagger-effekten lidt mere udtalt
+                entry.target.style.animation = `fadeInAnimation 0.7s cubic-bezier(0.215, 0.610, 0.355, 1.000) ${actualIndex * 0.15}s forwards`;
                 observer.unobserve(entry.target);
             }
         });
